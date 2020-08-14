@@ -109,20 +109,17 @@ def allowed_file(filename):
 
 @app.route('/send', methods=['POST'])
 def send():
-    if 'user_id' in session :
-        if request.method == 'POST':
-            img_file = request.files['img_file']
-            if img_file and allowed_file(img_file.filename):
-                filename = werkzeug.utils.secure_filename(img_file.filename)
-                img_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                img_url = '/uploads/' + filename
-                return render_template('bbs.html', img_url=img_url)
-            else:
-                return ''' <p>許可されていない拡張子です</p> '''
+    if request.method == 'POST':
+        img_file = request.files['img_file']
+        if img_file and allowed_file(img_file.filename):
+            filename = werkzeug.utils.secure_filename(img_file.filename)
+            img_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            img_url = '/uploads/' + filename
+            return render_template('bbs.html', img_url=img_url)
         else:
-            return redirect(url_for('bbs'))
+            return ''' <p>許可されていない拡張子です</p> '''
     else:
-        return redirect("/login")
+        return redirect('/bbs')
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -131,19 +128,16 @@ def uploaded_file(filename):
 
 @app.route('/add', methods=["POST"])
 def add():
-    if 'user_id' in session :
-        user_id = session['user_id']
-        # フォームから入力されたアイテム名の取得
-        comment = request.form.get("comment")
-        conn = sqlite3.connect('service.db')
-        c = conn.cursor()
-        # DBにデータを追加する
-        c.execute("insert into bbs values(null,?,?,null)", (user_id, comment))
-        conn.commit()
-        conn.close()
-        return redirect('/bbs')
-    else:
-        return redirect("/login")
+    user_id = session['user_id']
+    # フォームから入力されたアイテム名の取得
+    comment = request.form.get("comment")
+    conn = sqlite3.connect('service.db')
+    c = conn.cursor()
+    # DBにデータを追加する
+    c.execute("insert into bbs values(null,?,?,null)", (user_id, comment))
+    conn.commit()
+    conn.close()
+    return redirect('/bbs')
 
 
 @app.route('/edit/<int:id>')
